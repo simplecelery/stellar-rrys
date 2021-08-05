@@ -5,6 +5,7 @@ import threading
 import time
 import random
 import requests
+import importlib
 from bs4 import BeautifulSoup
 
 from .simple import PluginImpl
@@ -16,8 +17,12 @@ class Plugin(StellarPlayer.IStellarPlayerPlugin):
         self.pi = PluginImpl(player)
   
     def show(self):
-        thread = threading.Thread(target=self.pi.show, args=(), daemon=True)
-        thread.start()
+        self.pi.show()
+
+    def stop(self):
+        print('stop1')
+        self.pi.stop()
+        importlib.reload('_tkinter')
 
     
 def newPlugin(player:StellarPlayer.IStellarPlayer,*arg):

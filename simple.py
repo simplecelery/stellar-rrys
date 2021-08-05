@@ -1,4 +1,6 @@
 import threading
+import traceback
+
 import requests
 import os
 import time
@@ -25,6 +27,9 @@ class PluginImpl:
         self.window = None
         self.loading_gif = sg.DEFAULT_BASE64_LOADING_GIF #os.path.join(os.path.dirname(__file__), "loading.gif")
 
+    def stop(self):
+        self.window and self.window.write_event_value(sg.WIN_CLOSED, None)
+
     def show_loading(self, thread, msg):
         location = self.window.CurrentLocation()
         size = self.window.size
@@ -36,6 +41,13 @@ class PluginImpl:
         sg.popup_animated(None)
 
     def show(self):
+        try:
+            self._show()
+        except:
+            traceback.print_exc()
+            print("------------")
+
+    def _show(self):
         treedata = sg.TreeData()
         tab_list = sg.Tab('list', [[sg.LBox(values=[],
                                             size=[60, 20],
@@ -68,9 +80,11 @@ class PluginImpl:
         window.write_event_value('-HOT-', None)
 
         while True:
-            event, values = window.read()
+            event, values = window.read(timeout=0.01, timeout_key='--POLLING--')
             if event == sg.WIN_CLOSED:
                 break
+            elif event == '--POLLING--':
+                self.player._IStellarPlayer__procTasks()
             elif event == '-HOT-':
                 thread = threading.Thread(target=self.get_hot_data, args=(window,), daemon=True)
                 thread.start()
@@ -106,9 +120,8 @@ class PluginImpl:
                     self.player.play(values[0])
             else:
                 print(f'{event=}, {values=}')
-
-
         window.close()
+        self.window = None
 
     def get_hot_data(self, window):
         try:
