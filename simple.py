@@ -84,7 +84,7 @@ class PluginImpl:
             if event == sg.WIN_CLOSED:
                 break
             elif event == '--POLLING--':
-                self.player._IStellarPlayer__procTasks()
+                self.player and self.player._IStellarPlayer__procTasks()
             elif event == '-HOT-':
                 thread = threading.Thread(target=self.get_hot_data, args=(window,), daemon=True)
                 thread.start()
@@ -115,9 +115,9 @@ class PluginImpl:
                 window['-LIST-'].select()
             elif event == '-TREE-DBLCLICK':
                 selected_row = window.Element('-TREE-').SelectedRows[0]
-                values = window.Element('-TREE-').TreeData.tree_dict[selected_row].values
-                if values and values[0] and self.player and self.player.play:
-                    self.player.play(values[0])
+                row_values = window.Element('-TREE-').TreeData.tree_dict[selected_row].values
+                if row_values and row_values[0] and self.player and self.player.play:
+                    self.player.play(row_values[0])
             else:
                 print(f'{event=}, {values=}')
         window.close()
