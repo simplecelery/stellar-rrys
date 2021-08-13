@@ -22,6 +22,7 @@ class PluginImpl:
         self.hot_data = []
         self.hot_data_thread = None
         self.stop_flag = False
+        self.show_flag = False
         self.window = None
         self.loading_gif = sg.DEFAULT_BASE64_LOADING_GIF #os.path.join(os.path.dirname(__file__), "loading.gif")
 
@@ -35,7 +36,14 @@ class PluginImpl:
                 break
         sg.popup_animated(None)
 
+    def show_thread(self):
+        while not self.stop_flag:
+            if self.show_flag:
+                self.show()
+            time.sleep(0.1)
+
     def show(self):
+        sg.theme('Default1')
         treedata = sg.TreeData()
         tab_list = sg.Tab('list', [[sg.LBox(values=[],
                                             size=[60, 20],
@@ -65,12 +73,19 @@ class PluginImpl:
         window['-LBOX-'].bind('<Double-Button-1>', 'DBLCLICK')
         window['-TREE-'].bind('<Double-Button-1>', 'DBLCLICK')
 
-        window.write_event_value('-HOT-', None)
+        if self.hot_data:
+            window.write_event_value('-HOT-RESULT-', self.hot_data)
+        else:
+            window.write_event_value('-HOT-', None)
 
         while True:
-            event, values = window.read()
+            event, values = window.read(timeout=100, timeout_key='-POLLING-')
             if event == sg.WIN_CLOSED:
+                self.show_flag = False
                 break
+            elif event == '-POLLING-':
+                if not self.show_flag:
+                    break
             elif event == '-HOT-':
                 thread = threading.Thread(target=self.get_hot_data, args=(window,), daemon=True)
                 thread.start()
@@ -101,12 +116,16 @@ class PluginImpl:
                 window['-LIST-'].select()
             elif event == '-TREE-DBLCLICK':
                 selected_row = window.Element('-TREE-').SelectedRows[0]
+                print(selected_row)
                 values = window.Element('-TREE-').TreeData.tree_dict[selected_row].values
+                print(values)
+                print(self.player)
+                print(self.player.play)
+                print(values[0])
                 if values and values[0] and self.player and self.player.play:
                     self.player.play(values[0])
             else:
                 print(f'{event=}, {values=}')
-
 
         window.close()
 
@@ -116,8 +135,8 @@ class PluginImpl:
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
             top = requests.get("https://yyets.dmesg.app/api/top", headers=headers, timeout=TIMEOUT).json()
-            result = [ListItem(i["data"]["info"]["id"], i["data"]["info"]["cnname"]) for i in top["ALL"]]
-            window.write_event_value('-HOT-RESULT-', result)
+            self.hot_data = [ListItem(i["data"]["info"]["id"], i["data"]["info"]["cnname"]) for i in top["ALL"]]
+            window.write_event_value('-HOT-RESULT-', self.hot_data)
         except:
             window.write_event_value('-HOT-RESULT-', [])
 
