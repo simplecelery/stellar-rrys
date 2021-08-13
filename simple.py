@@ -60,6 +60,7 @@ class PluginImpl:
                                                 enable_events=True)]], key='-DETAIL-')
 
         layout = [
+            [sg.Text('感谢 yyets.dmesg.app 提供数据')],
             [sg.In('越狱', key='-Q-', ), sg.Btn('搜索', key='-SEARCH-'), sg.Btn('热门资源', key='-HOT-')],
             [sg.HSep()],
             [sg.TabGroup([[tab_list, tab_detail]], key="-TABG-")]
