@@ -1,2 +1,2 @@
-# stellar-search-nyaa
+# stellar-rrys
 stellarplayer plugin demo
